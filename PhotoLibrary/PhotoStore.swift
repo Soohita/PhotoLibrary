@@ -50,7 +50,10 @@ class PhotoStore {
                 // Some code for data and error handling
             
             let result = self.processImageRequest(data: data, error: error)
-            completion(result)
+            OperationQueue.main.addOperation {
+                
+                completion(result)
+            }
             
         }
         task.resume()
@@ -65,7 +68,9 @@ class PhotoStore {
             
             // result is [Photo]
             let result = self.processPhotosRequest(data: data, error: error)
-            completion(result)
+            OperationQueue.main.addOperation {
+                completion(result)
+            }
         }
         task.resume()
     }

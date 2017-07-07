@@ -25,7 +25,7 @@ struct FlickrAPI {
     
     /* CREATE URL */
     static var interestingPhotosURL: URL {
-        return flickrURL(method: .recentPhotos, parameters: ["extras" : "url_h,date_taken"])
+        return flickrURL(method: .recentPhotos, parameters: ["extras" : "url_s,date_taken"])
     }
     
     
@@ -60,7 +60,7 @@ struct FlickrAPI {
     private static func photo(fromJSON json:[String:Any]) -> Photo? {
         guard let photoID = json["id"] as? String,
               let title = json["title"] as? String,
-              let photoURLString = json["url_h"] as? String,
+              let photoURLString = json["url_s"] as? String,
               let url = URL(string: photoURLString),
               let dateString = json["datetaken"] as? String,
               let dateTaken = dateFormatter.date(from: dateString)

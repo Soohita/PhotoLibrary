@@ -8,60 +8,60 @@
 
 import UIKit
 
-class PhotosViewController: UIViewController {
+class PhotosViewController: UIViewController , UICollectionViewDelegate {
+
 
     
-    @IBOutlet var imageView:UIImageView!
-    var store: PhotoStore!
+    @IBOutlet weak var collectionView: UICollectionView!
 
+    var store: PhotoStore!
+    let photoDataSource = PhotoDataSource()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.collectionView.dataSource = photoDataSource
+        self.collectionView.delegate = self
 
         store.fetchInterestingPhotos{ (photosResult) in
             // When the task is done we will get the photosResult of [Photo]
             // async task
-            
+
             switch photosResult {
-                case let .success(photos):
-                    print("Got \(photos.count) photos ")
-                    if let firstPhoto = photos.first{
-                        self.updateImageView(for: firstPhoto)
-                }
-                case let .failure(error):
-                    print("No photos: \(error)")
-            }
-        }
-    }
+            case let .success(photos):
+                self.photoDataSource.photos = photos
 
-    
-    func updateImageView(for photo: Photo){
-        store.fetchImage(for: photo) { (imageResult) in
-            switch imageResult {
-            case let .success(image):
-                DispatchQueue.main.async {
-                self.imageView.image = image
-                }
             case let .failure(error):
-                print("Error downLoading image: \(error)")
+                print("Error fetching interesting photos: \(error)")
+                self.photoDataSource.photos.removeAll()
+
             }
+            self.collectionView.reloadSections(IndexSet(integer:0))
         }
     }
     
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        
+        let photo = photoDataSource.photos[indexPath.row]
+        // Download the image data, which could take some time.
+        store.fetchImage(for: photo){ (result) in
+            //The index path for the photo mignt have changed between the time
+            // The request started and finshed, so we have to find the most recent indexPath
+            guard let photoIndex = self.photoDataSource.photos.index(of: photo),
+                case let .success(image) = result else {return}
+            
+            let photoIndexPath = IndexPath(item: photoIndex, section:0)
+            
+            if let cell = self.collectionView.cellForItem(at: photoIndexPath) as? PhotoCollectionViewCell{
+                cell.update(with: image)
+            }
+            
+            
+        }
+        
+        
     }
-    
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
 
 }
+
